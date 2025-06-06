@@ -55,3 +55,138 @@ input::placeholder {
 ::-ms-input-placeholder { /* Microsoft Edge */
  color: #6c757d;
 }
+
+/* Styles for AgentCheckInOutPage */
+.filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+.filters-bar select, .filters-bar input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.bookings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+.booking-entry {
+  border: 1px solid #ddd;
+  border-left-width: 4px;
+  border-left-style: solid;
+  padding: 15px;
+  border-radius: 5px;
+  background-color: #fff;
+}
+.booking-entry h4 { margin-top: 0; margin-bottom: 10px; color: #007bff; }
+.booking-entry p { margin: 5px 0; font-size: 0.9em; }
+.status-text { font-weight: bold; }
+.status-text.status-confirmed { color: #28a745; }
+.status-text.status-checked-in { color: #17a2b8; }
+.status-text.status-checked-out { color: #6c757d; }
+.status-text.status-cancelled { color: #dc3545; }
+.status-text.status-no-show { color: #ffc107; }
+
+.booking-entry.status-confirmed { border-left-color: #28a745; }
+.booking-entry.status-checked-in { border-left-color: #17a2b8; }
+.booking-entry.status-checked-out { border-left-color: #6c757d; }
+.booking-entry.status-cancelled { border-left-color: #dc3545; }
+.booking-entry.status-no-show { border-left-color: #ffc107;}
+
+.booking-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+.booking-actions .action-btn { font-size: 0.85em; padding: 6px 10px; }
+.checkin-btn { background-color: #28a745; color: white; }
+.checkout-btn { background-color: #007bff; color: white; }
+.consumption-btn { background-color: #ffc107; color: #212529; }
+.noshow-btn { background-color: #fd7e14; color: white; }
+
+.consumptions-summary { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #eee; font-size: 0.85em; }
+.consumptions-summary ul { padding-left: 20px; margin: 5px 0; }
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background-color: white;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  width: 90%;
+  max-width: 500px;
+}
+.modal-content h3 { margin-top: 0; color: #333; }
+.modal-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+
+/* Styles for AgentBillingPage */
+.bookings-list-billing {
+  margin-top: 15px;
+}
+.booking-item-billing {
+  border: 1px solid #e0e0e0;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.booking-item-billing:hover {
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.booking-item-billing p { margin: 5px 0; }
+
+.bill-details-section {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+.bill-details-section h3 {
+  color: #004085;
+  border-bottom: 2px solid #004085;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+.back-to-list-btn {
+  background-color: #6c757d;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  border: none;
+}
+.back-to-list-btn:hover { background-color: #5a6268; }
+
+.bill-summary p { font-size: 1em; margin: 8px 0; }
+.bill-summary h4 { margin-top: 15px; margin-bottom: 5px; color: #333; }
+.bill-summary ul { list-style-type: disc; padding-left: 25px; margin-bottom: 15px; }
+.bill-summary ul li { font-size: 0.95em; margin-bottom: 5px; }
+.bill-summary hr { margin: 15px 0; border-top: 1px dashed #ccc; }
+.grand-total { font-size: 1.2em; font-weight: bold; color: #28a745; }
+
+.bill-actions { margin-top: 20px; display: flex; gap: 10px; }
+.pdf-btn, .email-btn {
+  padding: 10px 18px;
+  font-size: 1em;
+}
+.pdf-btn { background-color: #dc3545; color: white;} /* Red for PDF often */
+.email-btn { background-color: #17a2b8; color: white;} /* Info blue for email */
+.info-message { color: #004085; background-color: #cce5ff; border: 1px solid #b8daff; padding: 10px; border-radius: 4px; margin: 10px 0; }

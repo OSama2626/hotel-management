@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import './App.css';
 import LoginPage from './pages/LoginPage/LoginPage';
@@ -10,61 +10,92 @@ import MyBookingsPage from './pages/MyBookingsPage/MyBookingsPage';
 import AgentDashboardPage from './pages/AgentPages/AgentDashboardPage';
 import AgentCreateBookingPage from './pages/AgentPages/AgentCreateBookingPage';
 import AgentCreateClientPage from './pages/AgentPages/AgentCreateClientPage';
-import AgentCheckInOutPage from './pages/AgentPages/AgentCheckInOutPage'; // Import placeholder
+import AgentCheckInOutPage from './pages/AgentPages/AgentCheckInOutPage';
+import AgentBillingPage from './pages/AgentPages/AgentBillingPage';
 
-import { getCurrentUser, logoutUser } from './services/authService';
+import AdminDashboardPage from './pages/AdminPages/AdminDashboardPage';
+import AdminManageAgentsPage from './pages/AdminPages/AdminManageAgentsPage';
+import AdminManageHotelsPage from './pages/AdminPages/AdminManageHotelsPage';
+import AdminManageTariffsPage from './pages/AdminPages/AdminManageTariffsPage';
+import AdminValidateBookingsPage from './pages/AdminPages/AdminValidateBookingsPage';
+import AdminStatisticsPage from './pages/AdminPages/AdminStatisticsPage'; // Import actual page
+// Placeholders for other admin pages to be created
+// const AdminManageHotelsPage = () => <div className="admin-page"><header className="admin-header"><h1>Manage Hotels</h1></header><main className="admin-content"><p>Hotel Management (CRUD) - Coming Soon</p></main></div>; // Placeholder removed
+// const AdminManageTariffsPage = () => <div className="admin-page"><header className="admin-header"><h1>Manage Tariffs</h1></header><main className="admin-content"><p>Tariff Management - Coming Soon</p></main></div>; // Placeholder removed
+// const AdminValidateBookingsPage = () => <div className="admin-page"><header className="admin-header"><h1>Validate Bookings</h1></header><main className="admin-content"><p>Booking Validation - Coming Soon</p></main></div>; // Placeholder removed
+// const AdminStatisticsPage = () => <div className="admin-page"><header className="admin-header"><h1>Statistics</h1></header><main className="admin-content"><p>Statistics & Dashboard - Coming Soon</p></main></div>; // Placeholder removed
+
+
+import { getCurrentUser, logoutUser, getAllUsers as getAllAuthUsers } from './services/authService';
+import { syncAuthUsers } from './services/roomService';
 
 function App() {
   const navigate = useNavigate();
-  const [currentUserForNav, setCurrentUserForNav] = React.useState(null);
-  // Mock agent status - in a real app, this would be part of user's role
-  const [isAgent, setIsAgent] = React.useState(false);
+  const [currentUserForNav, setCurrentUserForNav] = useState(null);
+  const [isAgent, setIsAgent] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // New state for Admin
+  const [appLoading, setAppLoading] = useState(true);
 
-  React.useEffect(() => {
-    const updateUserNav = async () => {
-      const user = await getCurrentUser();
-      setCurrentUserForNav(user);
-      // Mock: if user is 'agent@example.com', consider them an agent
-      // In a real app, user object should have a 'role' property.
-      // For example, if (user && user.roles.includes('agent'))
-      if (user && user.email === 'agent@example.com') { // Simple mock condition
-        setIsAgent(true);
-      } else {
-        setIsAgent(false);
+  useEffect(() => {
+    const initializeApp = async () => {
+      setAppLoading(true);
+      try {
+        const user = await getCurrentUser();
+        setCurrentUserForNav(user);
+        if (user) {
+          setIsAgent(user.email === 'agent@example.com'); // Mock agent role
+          setIsAdmin(user.email === 'admin@example.com'); // Mock admin role
+        } else {
+          setIsAgent(false);
+          setIsAdmin(false);
+        }
+        const allUsers = await getAllAuthUsers();
+        syncAuthUsers(allUsers);
+      } catch (error) {
+        console.error("Error during app initialization:", error);
+      } finally {
+        setAppLoading(false);
       }
     };
-    updateUserNav();
+    initializeApp();
 
-    // This is a simple listener for re-checking on navigation or other events.
-    // A global auth context/event system would be more robust.
-    const handleAuthChange = () => updateUserNav();
-    window.addEventListener('authChange', handleAuthChange); // Assuming authService dispatches this
-
+    const handleAuthChange = async (event) => {
+      const user = event.detail?.user;
+      setCurrentUserForNav(user);
+      if (user) {
+        setIsAgent(user.email === 'agent@example.com'); // Mock agent role
+        setIsAdmin(user.email === 'admin@example.com'); // Mock admin role
+      } else {
+        setIsAgent(false);
+        setIsAdmin(false);
+      }
+      // Re-sync users on any auth change for simplicity in this mock setup
+      try {
+        const allUsers = await getAllAuthUsers();
+        syncAuthUsers(allUsers);
+      } catch (error) {
+        console.error("Error re-syncing users on authChange:", error);
+      }
+    };
+    window.addEventListener('authChange', handleAuthChange);
     return () => {
       window.removeEventListener('authChange', handleAuthChange);
     };
-  }, [navigate]); // navigate dependency helps re-check on route changes if needed
+  }, []);
 
   const handleLogout = async () => {
     try {
-      await logoutUser();
-      setCurrentUserForNav(null);
-      setIsAgent(false); // Reset agent status on logout
-      navigate('/login');
-      window.dispatchEvent(new CustomEvent('authChange')); // Dispatch event
+      await logoutUser(); // This should trigger authChange via authService
+      // UI updates (currentUserForNav, isAgent, isAdmin) are handled by authChange listener
+      navigate('/login'); // Explicit navigation after logout is fine
     } catch (error) {
       console.error("Logout failed:", error);
-      // Handle error display to user if necessary
     }
   };
 
-  // This function could be called after a successful login
-  // by LoginPage to trigger an immediate nav update.
-  // LoginPage would need to dispatch an 'authChange' event or App would pass this down.
-  // const handleLoginSuccess = () => {
-  //   window.dispatchEvent(new CustomEvent('authChange'));
-  // };
-
+  if (appLoading) {
+    return <div className="app-loading">Loading Application...</div>;
+  }
 
   return (
     <div>
@@ -75,7 +106,10 @@ function App() {
           {currentUserForNav ? (
             <>
               <li><Link to="/my-bookings">My Bookings</Link></li>
-              {isAgent && <li><Link to="/agent">Agent Portal</Link></li>}
+              {/* Show Agent Portal link if user is an agent AND NOT an admin */}
+              {isAgent && !isAdmin && <li><Link to="/agent">Agent Portal</Link></li>}
+              {/* Show Admin Portal link if user is an admin (admin might also be an agent, but Admin Portal takes precedence or is separate) */}
+              {isAdmin && <li><Link to="/admin">Admin Portal</Link></li>}
               <li><button onClick={handleLogout} className="nav-logout-btn">Logout ({currentUserForNav.name})</button></li>
             </>
           ) : (
@@ -89,19 +123,30 @@ function App() {
       <Routes>
         {/* Client Routes */}
         <Route path="/" element={<RoomListPage />} />
-        {/* Pass a callback to LoginPage to inform App.js about login success */}
-        <Route path="/login" element={<LoginPage /* onLoginSuccess={handleLoginSuccess} */ />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegistrationPage />} />
         <Route path="/rooms" element={<RoomListPage />} />
         <Route path="/book/:roomId" element={<BookingPage />} />
         <Route path="/my-bookings" element={<MyBookingsPage />} />
 
-        {/* Agent Routes - could be protected by a wrapper route in a real app */}
-        {/* For now, access is simply shown/hidden by nav link based on mock isAgent state */}
+        {/* Agent Routes */}
+        {/* These routes can remain accessible if an admin is also an agent,
+            or could be conditionally rendered based on !isAdmin && isAgent if strict separation is needed.
+            For now, if isAgent is true, these are available. The nav link logic provides primary role distinction.
+        */}
         <Route path="/agent" element={<AgentDashboardPage />} />
         <Route path="/agent/create-booking" element={<AgentCreateBookingPage />} />
         <Route path="/agent/create-client" element={<AgentCreateClientPage />} />
         <Route path="/agent/manage-checkinout" element={<AgentCheckInOutPage />} />
+        <Route path="/agent/billing" element={<AgentBillingPage />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminDashboardPage />} />
+        <Route path="/admin/manage-hotels" element={<AdminManageHotelsPage />} />
+        <Route path="/admin/manage-tariffs" element={<AdminManageTariffsPage />} />
+        <Route path="/admin/manage-agents" element={<AdminManageAgentsPage />} />
+        <Route path="/admin/validate-bookings" element={<AdminValidateBookingsPage />} />
+        <Route path="/admin/statistics" element={<AdminStatisticsPage />} />
 
       </Routes>
     </div>

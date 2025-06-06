@@ -12,11 +12,10 @@ const AgentDashboardPage = () => {
         <Link to="/agent/create-booking" className="agent-nav-link">New Booking for Client</Link>
         <Link to="/agent/create-client" className="agent-nav-link">Register New Client</Link>
         <Link to="/agent/manage-checkinout" className="agent-nav-link">Manage Check-in/Check-out</Link>
-        {/* Add more links as features are added */}
+        <Link to="/agent/billing" className="agent-nav-link">Client Billing</Link> {/* Added this link */}
       </nav>
       <main className="agent-content">
         <p>Welcome, Agent. Please select an option to proceed.</p>
-        {/* Dashboard widgets could go here in the future */}
       </main>
     </div>
   );
