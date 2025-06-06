@@ -2,15 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { bookService } from '../../services/roomService';
 import { getCurrentUser } from '../../services/authService';
+import FeedbackForm from '../../components/FeedbackForm';
+import { submitFeedback, getUserFeedbackForBooking } from '../../services/feedbackService';
 import './MyBookingsPage.css';
 
 const MyBookingsPage = () => {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  const [userFeedbacks, setUserFeedbacks] = useState({}); // Store feedback keyed by bookingId
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState(''); // General feedback for page operations
 
   useEffect(() => {
     const fetchUserDataAndBookings = async () => {
@@ -27,15 +30,52 @@ const MyBookingsPage = () => {
         setCurrentUser(user);
         const userBookings = await bookService.getUserBookings(user.id);
         setBookings(userBookings);
+
+        // Fetch feedback status for all relevant bookings
+        if (user && userBookings.length > 0) {
+          const feedbackStatuses = {};
+          for (const booking of userBookings) {
+            // Only check for feedback if booking is in a reviewable state (e.g., 'Checked-out')
+            // Let's assume 'Checked-out' is the status indicating a completed stay.
+            // Also, ensure booking.bookingId is used and converted to string for consistency.
+            if (booking.status === 'Checked-out') {
+              const existing = await getUserFeedbackForBooking(String(booking.bookingId), user.id);
+              if (existing) {
+                feedbackStatuses[String(booking.bookingId)] = existing;
+              }
+            }
+          }
+          setUserFeedbacks(feedbackStatuses);
+        }
       } catch (err) {
-        console.error("Error fetching bookings:", err);
-        setError(err.message || "Failed to fetch your bookings.");
+        console.error("Error fetching bookings or feedback:", err);
+        setError(err.message || "Failed to fetch your bookings or feedback.");
       } finally {
         setLoading(false);
       }
     };
     fetchUserDataAndBookings();
-  }, [navigate]);
+  }, [navigate]); // currentUser is not needed in dependency array as it's set within this effect.
+
+  const handleFeedbackSubmit = async ({ bookingId, rating, comment }) => {
+    if (!currentUser) {
+      setError("User not found. Please log in again.");
+      return;
+    }
+    try {
+      const newFeedback = await submitFeedback(String(bookingId), rating, comment, currentUser.id);
+      setUserFeedbacks(prevFeedbacks => ({
+        ...prevFeedbacks,
+        [String(bookingId)]: newFeedback
+      }));
+      // Optionally, provide a success message to the user via the general 'feedback' state
+      // setFeedback("Feedback submitted successfully!");
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      setError(error.message || "Failed to submit feedback.");
+      // alert("Failed to submit feedback."); // Or use the general feedback state
+    }
+  };
 
   const handleCancelBooking = async (bookingId) => {
     if (!currentUser || !bookingId) return;
@@ -114,6 +154,23 @@ const MyBookingsPage = () => {
                 )}
                 {booking.status === 'Cancelled' && (
                      <button onClick={() => navigate('/rooms')} className="action-btn book-again-btn">Book Again</button>
+                )}
+                {/* Add FeedbackForm section */}
+                {booking.status === 'Checked-out' && currentUser && (
+                  <div className="feedback-section">
+                    {userFeedbacks[String(booking.bookingId)] ? (
+                      <FeedbackForm
+                        bookingId={String(booking.bookingId)}
+                        existingFeedback={userFeedbacks[String(booking.bookingId)]}
+                        onSubmitFeedback={handleFeedbackSubmit} // Still pass, FeedbackForm handles read-only state
+                      />
+                    ) : (
+                      <FeedbackForm
+                        bookingId={String(booking.bookingId)}
+                        onSubmitFeedback={handleFeedbackSubmit}
+                      />
+                    )}
+                  </div>
                 )}
               </div>
             </div>

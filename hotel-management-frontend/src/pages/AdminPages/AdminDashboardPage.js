@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { bookService } from '../../services/roomService'; // To fetch pending bookings count
+import { getAllBookingsFeedback } from '../../services/feedbackService';
 import './AdminPages.css';
 
 const AdminDashboardPage = () => {
   const [pendingBookingsCount, setPendingBookingsCount] = useState(0);
   const [loadingCount, setLoadingCount] = useState(true);
+  const [allFeedback, setAllFeedback] = useState([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(true);
 
   useEffect(() => {
     const fetchCount = async () => {
@@ -22,6 +25,24 @@ const AdminDashboardPage = () => {
       }
     };
     fetchCount();
+  }, []);
+
+  useEffect(() => {
+    const fetchFeedback = async () => {
+        try {
+            setFeedbackLoading(true);
+            const feedbackData = await getAllBookingsFeedback();
+            // Sort feedback by timestamp, newest first
+            feedbackData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            setAllFeedback(feedbackData);
+        } catch (error) {
+            console.error("Error fetching feedback for admin:", error);
+            // Optionally set an error state for feedback
+        } finally {
+            setFeedbackLoading(false);
+        }
+    };
+    fetchFeedback();
   }, []);
 
   return (
@@ -51,6 +72,28 @@ const AdminDashboardPage = () => {
 
         <div className="admin-info-box">
           <p><strong>Note on Security:</strong> Two-Factor Authentication (2FA) is conceptually required for admin access but not fully implemented in this mock frontend.</p>
+        </div>
+
+        {/* User Feedback Section */}
+        <div className="admin-section feedback-dashboard-section">
+            <h2>User Feedback</h2>
+            {feedbackLoading ? (
+                <p>Loading feedback...</p>
+            ) : allFeedback.length === 0 ? (
+                <p>No feedback submitted yet.</p>
+            ) : (
+                <ul className="feedback-list-admin">
+                    {allFeedback.map(fb => (
+                        <li key={fb.id} className="feedback-item-admin">
+                            <p><strong>Booking ID:</strong> {fb.bookingId}</p>
+                            <p><strong>User ID:</strong> {fb.userId}</p>
+                            <p><strong>Rating:</strong> {'★'.repeat(fb.rating)}{'☆'.repeat(5 - fb.rating)} ({fb.rating}/5)</p>
+                            <p><strong>Comment:</strong> {fb.comment}</p>
+                            <p><strong>Date:</strong> {new Date(fb.timestamp).toLocaleString()}</p>
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
       </main>
     </div>
