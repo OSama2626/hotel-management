@@ -39,3 +39,12 @@ nav ul li a:hover {
 .nav-logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 1em; }
 .nav-logout-btn:hover { background-color: #c82333; }
 .nav-user-name { color: #ffc107; margin-right: 10px; }
+
+.app-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.5em;
+  color: #333;
+}
