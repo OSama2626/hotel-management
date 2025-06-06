@@ -292,7 +292,7 @@ const AdminManageTariffsPage = () => {
                       <td>{s.name}</td>
                       <td>{new Date(s.startDate).toLocaleDateString()}</td>
                       <td>{new Date(s.endDate).toLocaleDateString()}</td>
-                      <td>{Object.keys(s.tariffs || {}).length > 0 ? Object.entries(s.tariffs).map(([type, price]) => \`\${type}: \${price}\`).join(', ') : 'None'}</td>
+                      <td>{Object.keys(s.tariffs || {}).length > 0 ? Object.entries(s.tariffs).map(([type, price]) => `${type}: ${price}`).join(', ') : 'None'}</td>
                       <td className="actions">
                         <button onClick={() => handleManageTariffs(s)} className="edit-btn">Manage Tariffs</button>
                         <button onClick={() => handleEditSeason(s)} className="edit-btn" style={{marginLeft:'5px'}}>Edit Season</button>

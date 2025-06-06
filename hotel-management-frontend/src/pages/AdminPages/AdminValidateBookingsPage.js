@@ -68,7 +68,7 @@ const AdminValidateBookingsPage = () => {
     setFeedback(''); setError('');
     try {
       await bookService.adminApproveBooking(bookingId, currentAdmin.id);
-      setFeedback(\`Booking \${bookingId} approved successfully.\`);
+      setFeedback(`Booking ${bookingId} approved successfully.`);
       fetchPendingBookings(); // Refresh list
     } catch (err) {
       setError(err.message || "Failed to approve booking.");
@@ -86,7 +86,7 @@ const AdminValidateBookingsPage = () => {
     }
     try {
       await bookService.adminRejectBooking(bookingId, currentAdmin.id, reason);
-      setFeedback(\`Booking \${bookingId} rejected successfully.\`);
+      setFeedback(`Booking ${bookingId} rejected successfully.`);
       fetchPendingBookings(); // Refresh list
     } catch (err) {
       setError(err.message || "Failed to reject booking.");

@@ -108,7 +108,7 @@ const AdminStatisticsPage = () => {
   const getHotelName = (hotelId) => hotels.find(h => h.id === hotelId)?.name || hotelId;
 
   const handleMockExport = (format) => {
-    alert(\`Simulating export to \${format}...
+    alert(`Simulating export to ${format}...
 (Data for export would be prepared here based on current stats)`);
     console.log({ statsToExport: stats });
   };

@@ -30,10 +30,10 @@ const AdminManageAgentsPage = () => {
 
   const handleRoleChange = async (userId, newRole) => {
     setFeedback(''); setError('');
-    if (!window.confirm(\`Are you sure you want to change this user's role to \${newRole}?\`)) return;
+    if (!window.confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
     try {
       await adminUpdateUserRole(userId, newRole);
-      setFeedback(\`User role updated successfully. New role: \${newRole}\`);
+      setFeedback(`User role updated successfully. New role: ${newRole}`);
       fetchAllUsers(); // Re-fetch to show updated role
     } catch (err) {
       setError(err.message || "Failed to update role.");
