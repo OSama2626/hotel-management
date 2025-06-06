@@ -5,21 +5,21 @@ let mockRoomDatabase = [
     availability: 'Available', amenities: ['Wi-Fi', 'TV', 'Air Conditioning'],
     bookings: [
       { bookingId: 'B001', roomId: '1', userId: 'user1', hotelId: 'H1', startDate: '2024-03-01', endDate: '2024-03-03', bookedAt: '2024-02-15T10:00:00Z', status: 'Checked-out', validationStatus: 'Approved', validatedByAdminId: 'admin0', validationReason: null, agentId: 'agent1', consumptions: [{ itemName: 'Water', price: 2, quantity: 1}], bookedPricePerNight: 100 },
-      { bookingId: 'B002', roomId: '1', userId: 'user2', hotelId: 'H1', startDate: '2024-08-10', endDate: '2024-08-12', bookedAt: '2024-07-01T11:00:00Z', status: 'Pending Admin Approval', validationStatus: 'Pending', validatedByAdminId: null, validationReason: null, agentId: null, consumptions: [], bookedPricePerNight: 120 } // Summer high price
+      { bookingId: 'B002', roomId: '1', userId: 'user2', hotelId: 'H1', startDate: '2024-08-10', endDate: '2024-08-12', bookedAt: '2024-07-01T11:00:00Z', status: 'Pending Admin Approval', validationStatus: 'Pending', validatedByAdminId: null, validationReason: null, agentId: null, consumptions: [], bookedPricePerNight: 120 }
     ]
   },
   {
     id: '2', hotelId: 'H1', name: 'Spacious Double Room', type: 'Double', location: 'Downtown Hotel', price: 150,
     availability: 'Available', amenities: ['Wi-Fi', 'TV', 'Air Conditioning', 'Balcony'],
     bookings: [
-      { bookingId: 'B003', roomId: '2', userId: 'user3', hotelId: 'H1', startDate: '2024-09-05', endDate: '2024-09-07', bookedAt: '2024-08-20T14:00:00Z', status: 'Checked-in', validationStatus: 'Approved', validatedByAdminId: 'admin0', validationReason: null, agentId: 'agent1', consumptions: [{ itemName: 'Snack Bar', price: 15, quantity: 1}], bookedPricePerNight: 150 } // Assuming base price
+      { bookingId: 'B003', roomId: '2', userId: 'user3', hotelId: 'H1', startDate: '2024-09-05', endDate: '2024-09-07', bookedAt: '2024-08-20T14:00:00Z', status: 'Checked-in', validationStatus: 'Approved', validatedByAdminId: 'admin0', validationReason: null, agentId: 'agent1', consumptions: [{ itemName: 'Snack Bar', price: 15, quantity: 1}], bookedPricePerNight: 150 }
     ]
   },
   {
     id: '3', hotelId: 'H2', name: 'Luxury Suite', type: 'Suite', location: 'Sea View Resort', price: 300,
     availability: 'Available', amenities: ['Wi-Fi', 'Large TV', 'Air Conditioning', 'Jacuzzi', 'Mini Bar'],
     bookings: [
-        { bookingId: 'B004', roomId: '3', userId: 'user4', hotelId: 'H2', startDate: '2024-10-15', endDate: '2024-10-18', bookedAt: '2024-09-01T16:00:00Z', status: 'Pending Admin Approval', validationStatus: 'Pending', validatedByAdminId: null, validationReason: null, agentId: null, consumptions: [], bookedPricePerNight: 300 } // Base price, H2 Peak season is Jul-Sep
+        { bookingId: 'B004', roomId: '3', userId: 'user4', hotelId: 'H2', startDate: '2024-10-15', endDate: '2024-10-18', bookedAt: '2024-09-01T16:00:00Z', status: 'Pending Admin Approval', validationStatus: 'Pending', validatedByAdminId: null, validationReason: null, agentId: null, consumptions: [], bookedPricePerNight: 300 }
     ]
   },
   { id: '4', hotelId: 'H2', name: 'Comfort Double Room', type: 'Double Confort', location: 'Sea View Resort', price: 180, availability: 'Available', amenities: ['Wi-Fi', 'TV', 'Air Conditioning', 'Desk'], bookings: [] },
@@ -169,7 +169,58 @@ export const bookService = {
   },
   getUserBookings: async (userId) => { return new Promise((resolve) => setTimeout(() => { const userBookings = []; mockRoomDatabase.forEach(room => { room.bookings.forEach(booking => { if (booking.userId === userId) { const client = mockAuthUsers.find(u => u.id === booking.userId); userBookings.push({ ...booking, roomName: room.name, roomLocation: room.location, roomPrice: booking.bookedPricePerNight !== undefined ? booking.bookedPricePerNight : room.price, clientName: client?.name || 'N/A', clientEmail: client?.email || 'N/A' }); } }); }); resolve(userBookings.sort((a, b) => new Date(b.bookedAt) - new Date(a.bookedAt))); }, 100)); },
   cancelBooking: async (bookingId, userIdPerformingCancel, rolePerformingCancel = 'client') => { return new Promise((resolve, reject) => setTimeout(() => { for (const room of mockRoomDatabase) { const bookingIndex = room.bookings.findIndex(b => b.bookingId === bookingId); if (bookingIndex !== -1) { if (room.bookings[bookingIndex].userId !== userIdPerformingCancel && rolePerformingCancel === 'client') return reject({ message: "Client can only cancel their own bookings."}); if (room.bookings[bookingIndex].status === 'Cancelled' || room.bookings[bookingIndex].status === 'Rejected') return reject({ message: 'This booking is already cancelled/rejected.' }); room.bookings[bookingIndex].status = 'Cancelled'; room.bookings[bookingIndex].validationStatus = 'N/A'; return resolve({ message: 'Booking cancelled successfully.', booking: {...room.bookings[bookingIndex]} }); } } reject({ message: 'Booking not found.' }); }, 100)); },
-  getBookingsForHotel: async (hotelId, filters = {}) => { return new Promise((resolve) => setTimeout(() => { let hotelBookings = []; mockRoomDatabase.forEach(room => { if (room.hotelId === hotelId) { room.bookings.forEach(booking => { const client = mockAuthUsers.find(u => u.id === booking.userId); hotelBookings.push({ ...booking, roomName: room.name, roomType: room.type, roomPrice: booking.bookedPricePerNight !== undefined ? booking.bookedPricePerNight : room.price, clientName: client?.name || 'N/A', clientEmail: client?.email || 'N/A' }); }); } }); if (filters.status) { hotelBookings = hotelBookings.filter(b => b.status === filters.status); } if (filters.validationStatus) { hotelBookings = hotelBookings.filter(b => b.validationStatus === filters.validationStatus); } if (filters.date) { const fDate = new Date(filters.date); fDate.setHours(0,0,0,0); hotelBookings = hotelBookings.filter(b => { const sDate = new Date(b.startDate); sDate.setHours(0,0,0,0); const eDate = new Date(b.endDate); eDate.setHours(0,0,0,0); return sDate <= fDate && fDate < eDate; }); } if (filters.searchTerm) { const term = filters.searchTerm.toLowerCase(); hotelBookings = hotelBookings.filter(b => b.clientName?.toLowerCase().includes(term) || b.clientEmail?.toLowerCase().includes(term) || b.bookingId?.toLowerCase().includes(term) || b.roomName?.toLowerCase().includes(term)); } resolve(hotelBookings.sort((a, b) => new Date(a.startDate) - new Date(b.startDate))); }, 100)); },
+
+  // MODIFIED getBookingsForHotel
+  getBookingsForHotel: async (hotelId, filters = {}) => {
+    return new Promise((resolve) => setTimeout(() => {
+        let collectedBookings = [];
+        mockRoomDatabase.forEach(room => {
+            // If hotelId is null/undefined, consider all rooms. Otherwise, filter by room.hotelId.
+            if (hotelId === null || hotelId === undefined || room.hotelId === hotelId) {
+                room.bookings.forEach(booking => {
+                    const client = mockAuthUsers.find(u => u.id === booking.userId);
+                    collectedBookings.push({
+                        ...booking,
+                        roomName: room.name,
+                        roomType: room.type,
+                        // Use bookedPricePerNight if available, else fallback to current room price (less accurate for historical)
+                        roomPrice: booking.bookedPricePerNight !== undefined ? booking.bookedPricePerNight : getPriceForRoomType(room, new Date(booking.startDate)),
+                        clientName: client?.name || 'N/A',
+                        clientEmail: client?.email || 'N/A'
+                    });
+                });
+            }
+        });
+
+        if (filters.status) {
+            collectedBookings = collectedBookings.filter(b => b.status === filters.status);
+        }
+        if (filters.validationStatus) {
+            collectedBookings = collectedBookings.filter(b => b.validationStatus === filters.validationStatus);
+        }
+        if (filters.date) {
+            const fDate = new Date(filters.date);
+            fDate.setHours(0,0,0,0);
+            collectedBookings = collectedBookings.filter(b => {
+                const sDate = new Date(b.startDate); sDate.setHours(0,0,0,0);
+                const eDate = new Date(b.endDate); eDate.setHours(0,0,0,0);
+                // Check if the filter date falls within the booking period (inclusive start, exclusive end for stay)
+                // For "active on this day", it means startDate <= fDate < endDate
+                return sDate <= fDate && fDate < eDate;
+            });
+        }
+        if (filters.searchTerm) {
+            const term = filters.searchTerm.toLowerCase();
+            collectedBookings = collectedBookings.filter(b =>
+                b.clientName?.toLowerCase().includes(term) ||
+                b.clientEmail?.toLowerCase().includes(term) ||
+                b.bookingId?.toLowerCase().includes(term) ||
+                b.roomName?.toLowerCase().includes(term)
+            );
+        }
+        resolve(collectedBookings.sort((a, b) => new Date(a.startDate) - new Date(b.startDate)));
+    }, 100));
+  },
   updateBookingStatus: async (bookingId, newStatus, agentIdPerformingAction) => { return new Promise((resolve, reject) => setTimeout(() => { for (const room of mockRoomDatabase) { const bookingIndex = room.bookings.findIndex(b => b.bookingId === bookingId); if (bookingIndex !== -1) { const booking = room.bookings[bookingIndex]; if (booking.status === 'Cancelled' && newStatus !== 'Cancelled') return reject({ message: 'Cannot change status of a cancelled booking.' }); if ((booking.status === 'Checked-out' || booking.status === 'No-show') && (newStatus !== 'Checked-out' && newStatus !== 'No-show')) return reject({ message: \`Cannot change status from \${booking.status} to \${newStatus}.\`}); booking.status = newStatus; if (agentIdPerformingAction) booking.agentId = agentIdPerformingAction; if (newStatus === 'Checked-in') booking.checkedInTime = new Date().toISOString(); if (newStatus === 'Checked-out') booking.checkedOutTime = new Date().toISOString(); return resolve({ message: \`Booking \${bookingId} status updated to \${newStatus}.\`, booking: {...booking} }); } } reject({ message: \`Booking \${bookingId} not found.\` }); }, 100)); },
   addConsumptionToBooking: async (bookingId, consumptionItem) => { return new Promise((resolve, reject) => setTimeout(() => { for (const room of mockRoomDatabase) { const bookingIndex = room.bookings.findIndex(b => b.bookingId === bookingId); if (bookingIndex !== -1) { if (room.bookings[bookingIndex].status !== 'Checked-in') return reject({ message: 'Consumptions can only be added to Checked-in bookings.' }); const newItem = { ...consumptionItem, id: \`cons-\${Date.now()}\`, addedAt: new Date().toISOString() }; if(!room.bookings[bookingIndex].consumptions) room.bookings[bookingIndex].consumptions = []; room.bookings[bookingIndex].consumptions.push(newItem); return resolve({ message: 'Consumption added successfully.', booking: {...room.bookings[bookingIndex]} }); } } reject({ message: \`Booking \${bookingId} not found.\` }); }, 100)); },
 
@@ -220,3 +271,5 @@ export const bookService = {
     });
   }
 };
+
+[end of hotel-management-frontend/src/services/roomService.js]
